@@ -1,34 +1,31 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import emailjs from "@emailjs/browser";
 
-const sendEmail = async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method Not Allowed" });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const { to_name, from_name, to_email, subject, message } = req.body;
+  const { email, subject, message } = req.body;
 
   try {
     const response = await emailjs.send(
-      process.env.EMAILJS_SERVICE_ID!, // Substitua pela sua Service ID
-      process.env.EMAILJS_TEMPLATE_ID!, // Substitua pelo seu Template ID
+      process.env.EMAILJS_SERVICE_ID!, // ID do Serviço (do painel EmailJS)
+      process.env.EMAILJS_TEMPLATE_ID!, // ID do Template (do painel EmailJS)
       {
-        to_name,
-        from_name,
-        message,
+        to_email: email,
         subject,
-        to_email,
+        message,
       },
-      process.env.EMAILJS_PUBLIC_KEY! // Substitua pela sua Public Key
+      process.env.EMAILJS_PUBLIC_KEY! // Chave Pública (do painel EmailJS)
     );
 
-    return res
-      .status(200)
-      .json({ message: "Email sent successfully", response });
+    res.status(200).json({ success: true, response });
   } catch (error) {
-    console.error("Error sending email:", error);
-    return res.status(500).json({ message: "Error sending email", error });
+    console.error("EmailJS Error:", error);
+    res.status(500).json({ success: false, error: "Failed to send email" });
   }
-};
-
-export default sendEmail;
+}
