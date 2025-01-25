@@ -23,9 +23,8 @@ export const sendEmail = async ({
   try {
     const { emailjsServiceId, emailjsTemplateId, emailjsPublicKey } =
       config.env.emailJs;
-    const serviceId = config.env.emailJs.emailjsServiceId;
-    const templateId = config.env.emailJs.emailjsTemplateId;
-    const publicKey = config.env.emailJs.emailjsPublicKey;
+
+    emailjs.init(emailjsPublicKey);
 
     const templateParams = {
       to_email: email,

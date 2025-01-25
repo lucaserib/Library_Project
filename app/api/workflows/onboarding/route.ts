@@ -44,23 +44,16 @@ export const { POST } = serve<InitialData>(async (context) => {
   const { email, fullName } = context.requestPayload;
 
   // Welcome Email
-  try {
-    await context.run("new-signup", async () => {
-      console.log("Enviando e-mail de boas-vindas...");
 
-      await sendEmail({
-        email,
-        subject: "Welcome to the platform",
-        message: `Welcome ${fullName}!`,
-      });
+  await context.run("new-signup", async () => {
+    console.log("Enviando e-mail de boas-vindas...");
+
+    await sendEmail({
+      email,
+      subject: "Welcome to the platform",
+      message: `Welcome ${fullName}!`,
     });
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error("Erro no fluxo de boas-vindas:", error.message);
-    } else {
-      console.error("Erro no fluxo de boas-vindas:", error);
-    }
-  }
+  });
 
   await context.sleep("wait-for-3-days", 60 * 60 * 24 * 3);
 
