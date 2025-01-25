@@ -1,25 +1,25 @@
 "use server";
 
-import { signIn } from "@/auth";
+import { eq } from "drizzle-orm";
 import { db } from "@/database/drizzle";
 import { users } from "@/database/schema";
 import { hash } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { signIn } from "@/auth";
 import { headers } from "next/headers";
-import ratelimit from "../ratelimit";
+import ratelimit from "@/lib/ratelimit";
 import { redirect } from "next/navigation";
-import { workflowClient } from "../workflow";
-import config from "../config";
+import { workflowClient } from "@/lib/workflow";
+import config from "@/lib/config";
 
 export const signInWithCredentials = async (
   params: Pick<AuthCredentials, "email" | "password">
 ) => {
   const { email, password } = params;
-  const ip = (await headers()).get("x-fowarded-for") || "127.0.0.1";
 
+  const ip = (await headers()).get("x-forwarded-for") || "127.0.0.1";
   const { success } = await ratelimit.limit(ip);
 
-  if (!success) redirect("/too-fast");
+  if (!success) return redirect("/too-fast");
 
   try {
     const result = await signIn("credentials", {
@@ -34,19 +34,18 @@ export const signInWithCredentials = async (
 
     return { success: true };
   } catch (error) {
-    console.log(error, "Sign-up error");
-    return { success: false, error: "Sign up error" };
+    console.log(error, "Signin error");
+    return { success: false, error: "Signin error" };
   }
 };
 
 export const signUp = async (params: AuthCredentials) => {
-  const { fullName, email, password, universityId, universityCard } = params;
+  const { fullName, email, universityId, password, universityCard } = params;
 
-  const ip = (await headers()).get("x-fowarded-for") || "127.0.0.1";
-
+  const ip = (await headers()).get("x-forwarded-for") || "127.0.0.1";
   const { success } = await ratelimit.limit(ip);
 
-  if (!success) redirect("/too-fast");
+  if (!success) return redirect("/too-fast");
 
   const existingUser = await db
     .select()
@@ -62,11 +61,11 @@ export const signUp = async (params: AuthCredentials) => {
 
   try {
     await db.insert(users).values({
-      email,
       fullName,
+      email,
+      universityId,
       password: hashedPassword,
       universityCard,
-      universityId,
     });
 
     await workflowClient.trigger({
@@ -81,7 +80,7 @@ export const signUp = async (params: AuthCredentials) => {
 
     return { success: true };
   } catch (error) {
-    console.log(error, "Sign-up error");
-    return { success: false, error: "Sign up error" };
+    console.log(error, "Signup error");
+    return { success: false, error: "Signup error" };
   }
 };
