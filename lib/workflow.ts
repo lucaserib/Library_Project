@@ -1,6 +1,7 @@
 import { Client as WorkflowClient } from "@upstash/workflow";
 import config from "./config";
 import { Client as QStashClient, resend } from "@upstash/qstash";
+import emailjs from "@emailjs/browser";
 
 export const workflowClient = new WorkflowClient({
   baseUrl: config.env.upstash.qstashUrl,
@@ -19,12 +20,25 @@ export const sendEmail = async ({
   subject: string;
   message: string;
 }) => {
-  await qstashClient.publishJSON({
-    url: `${config.env.apiEndpoint}/api/sendEmail`,
-    body: {
-      email,
+  try {
+    const serviceId = config.env.emailJs.emailjsServiceId;
+    const templateId = config.env.emailJs.emailjsTemplateId;
+    const publicKey = config.env.emailJs.emailjsPublicKey;
+
+    const templateParams = {
+      to_email: email,
       subject,
       message,
-    },
-  });
+    };
+    const response = await emailjs.send(
+      serviceId,
+      templateId,
+      templateParams,
+      publicKey
+    );
+    console.log("Email enviado com sucesso:", response.status, response.text);
+  } catch (error) {
+    console.error("Erro ao enviar e-mail:", error);
+    throw new Error("Erro ao disparar o email via EmailJS.");
+  }
 };
