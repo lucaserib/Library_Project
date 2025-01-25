@@ -21,6 +21,8 @@ export const sendEmail = async ({
   message: string;
 }) => {
   try {
+    const { emailjsServiceId, emailjsTemplateId, emailjsPublicKey } =
+      config.env.emailJs;
     const serviceId = config.env.emailJs.emailjsServiceId;
     const templateId = config.env.emailJs.emailjsTemplateId;
     const publicKey = config.env.emailJs.emailjsPublicKey;
@@ -31,10 +33,10 @@ export const sendEmail = async ({
       message,
     };
     const response = await emailjs.send(
-      serviceId,
-      templateId,
+      emailjsServiceId,
+      emailjsTemplateId,
       templateParams,
-      publicKey
+      emailjsPublicKey
     );
     console.log("Email enviado com sucesso:", response.status, response.text);
   } catch (error) {
