@@ -12,6 +12,28 @@ const qstashClient = new QStashClient({
   token: config.env.upstash.qstashToken,
 });
 
+export const triggerEmailWorkflow = async ({
+  email,
+  subject,
+  message,
+}: {
+  email: string;
+  subject: string;
+  message: string;
+}) => {
+  try {
+    // Publica a tarefa no QStash
+    await qstashClient.publishJSON({
+      url: `${config.env.prodApiEndpoint}/api/workflows/send-email`,
+      body: { email, subject, message },
+      retries: 3, // Tentativas automáticas em caso de erro
+    });
+    console.log("Email workflow triggered successfully");
+  } catch (error) {
+    console.error("Failed to trigger email workflow:", error);
+    throw new Error("Error triggering email workflow.");
+  }
+};
 export const sendEmail = async ({
   email,
   subject,
