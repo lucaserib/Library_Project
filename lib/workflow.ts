@@ -1,6 +1,5 @@
 import { Client as WorkflowClient } from "@upstash/workflow";
 import { Client as QStashClient } from "@upstash/qstash";
-import emailjs from "@emailjs/browser";
 import config from "@/lib/config";
 
 export const workflowClient = new WorkflowClient({
@@ -43,19 +42,35 @@ export const sendEmailJS = async ({
   message: string;
 }) => {
   try {
-    await emailjs.send(
-      config.env.emailJs.emailjsServiceId,
-      config.env.emailJs.emailjsTemplateId,
+    const response = await fetch(
+      "https://api.emailjs.com/api/v1.0/email/send",
       {
-        to_email: email,
-        subject,
-        message,
-      },
-      config.env.emailJs.emailjsPublicKey
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          service_id: config.env.emailJs.emailjsServiceId,
+          template_id: config.env.emailJs.emailjsTemplateId,
+          user_id: config.env.emailJs.emailjsPublicKey,
+          template_params: {
+            to_email: email,
+            subject,
+            message,
+          },
+        }),
+      }
     );
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("EmailJS API Error:", error);
+      throw new Error("Failed to send email via EmailJS.");
+    }
+
     console.log("EmailJS: Email sent successfully.");
   } catch (error) {
     console.error("EmailJS Error:", error);
-    throw new Error("Failed to send email via EmailJS.");
+    throw error;
   }
 };
