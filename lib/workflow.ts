@@ -1,7 +1,7 @@
 import { Client as WorkflowClient } from "@upstash/workflow";
 import { Client as QStashClient } from "@upstash/qstash";
-import config from "@/lib/config";
 import emailjs from "@emailjs/browser";
+import config from "@/lib/config";
 
 export const workflowClient = new WorkflowClient({
   baseUrl: config.env.upstash.qstashUrl,
@@ -12,7 +12,7 @@ const qstashClient = new QStashClient({
   token: config.env.upstash.qstashToken,
 });
 
-export const triggerEmailWorkflow = async ({
+export const sendEmail = async ({
   email,
   subject,
   message,
@@ -22,19 +22,18 @@ export const triggerEmailWorkflow = async ({
   message: string;
 }) => {
   try {
-    // Publica a tarefa no QStash
     await qstashClient.publishJSON({
       url: `${config.env.prodApiEndpoint}/api/workflows/send-email`,
       body: { email, subject, message },
-      retries: 3, // Tentativas automáticas em caso de erro
     });
-    console.log("Email workflow triggered successfully");
+    console.log("QStash: Email task enqueued successfully.");
   } catch (error) {
-    console.error("Failed to trigger email workflow:", error);
-    throw new Error("Error triggering email workflow.");
+    console.error("QStash Error:", error);
+    throw new Error("Failed to enqueue email task.");
   }
 };
-export const sendEmail = async ({
+
+export const sendEmailJS = async ({
   email,
   subject,
   message,
@@ -54,9 +53,9 @@ export const sendEmail = async ({
       },
       config.env.emailJs.emailjsPublicKey
     );
-    console.log("Email sent successfully");
+    console.log("EmailJS: Email sent successfully.");
   } catch (error) {
-    console.error("Failed to send email:", error);
-    throw new Error("EmailJS error: Unable to send email.");
+    console.error("EmailJS Error:", error);
+    throw new Error("Failed to send email via EmailJS.");
   }
 };

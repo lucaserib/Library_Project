@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendEmail } from "@/lib/workflow";
+import { sendEmailJS } from "@/lib/workflow";
 
 export const POST = async (request: Request) => {
   try {
@@ -12,13 +12,13 @@ export const POST = async (request: Request) => {
       );
     }
 
-    await sendEmail({ email, subject, message });
+    await sendEmailJS({ email, subject, message });
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("Failed to process email workflow:", error);
+    console.error("Email processing error:", error);
     return NextResponse.json(
-      { error: "Failed to send email" },
+      { error: "Failed to process email" },
       { status: 500 }
     );
   }
